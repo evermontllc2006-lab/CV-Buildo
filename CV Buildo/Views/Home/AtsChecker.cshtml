@@ -1,0 +1,229 @@
+﻿@{
+    ViewData["Title"] = "Free ATS Resume Checker";
+}
+
+<!-- Latest PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+    .ats-hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 60px 20px; border-radius: 0 0 20px 20px; margin-bottom: 40px; text-align: center; }
+    .upload-box { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px; text-align: center; background: #fff; cursor: pointer; transition: all 0.3s; }
+    .upload-box:hover { border-color: #3b82f6; background: #eff6ff; }
+    .result-card { background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 30px; height: 100%; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; border: 8px solid #e2e8f0; font-size: 2.5rem; font-weight: 800; color: #1e293b; transition: all 0.5s ease; }
+    .keyword-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; margin: 4px; font-weight: 500; }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+</style>
+
+<div class="ats-hero">
+    <div class="container">
+        <h1 class="fw-bold">AI-Powered ATS Checker</h1>
+        <p class="text-light">Upload your resume, select your target job, and get instant feedback.</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="result-card">
+                <h5 class="fw-bold mb-3">1. Select Target Job</h5>
+                <select id="targetJob" class="form-select mb-4">
+                    <option value="software">Software Engineer / Developer</option>
+                    <option value="data">Data Analyst / Scientist</option>
+                    <option value="design">UI/UX Designer</option>
+                    <option value="marketing">Marketing Manager</option>
+                    <option value="sales">Sales Executive</option>
+                    <option value="finance">Accountant / Auditor</option>
+                    <option value="hr">Human Resources (HR)</option>
+                    <option value="teacher">Teacher / Educator</option>
+                    <option value="doctor">Doctor / Nurse</option>
+                    <option value="engineer">Civil / Mechanical Engineer</option>
+                    <option value="customer">Customer Service</option>
+                    <option value="admin">Administrative Assistant</option>
+                    <option value="legal">Legal Assistant / Paralegal</option>
+                    <option value="general">General / Other</option>
+                </select>
+
+                <h5 class="fw-bold mb-3">2. Upload Your CV (PDF)</h5>
+                
+                <!-- File Upload Box -->
+                <div class="upload-box" id="dropZone" onclick="document.getElementById('cvFile').click()">
+                    <h6 class="fw-bold text-dark">Click to upload PDF</h6>
+                    <p class="text-muted small">Max 5MB</p>
+                    <input type="file" id="cvFile" accept="application/pdf" class="d-none" onchange="handleFileUpload(event)">
+                </div>
+                
+                <!-- File Status -->
+                <div id="fileInfo" class="mt-2 text-success fw-bold" style="display:none;">✓ <span id="fileName"></span> ready</div>
+
+                <!-- Analyze Button -->
+                <button type="button" id="checkBtn" class="btn btn-primary w-100 py-3 mt-4 fw-bold" onclick="processATS()">Analyze Resume</button>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <!-- Result Area -->
+            <div class="result-card" id="resultCard" style="display: none;">
+                <h4 class="fw-bold mb-4 border-bottom pb-2">ATS Analysis Report</h4>
+                <div class="text-center mb-4">
+                    <div id="scoreCircle" class="score-circle">0%</div>
+                    <h5 class="fw-bold text-dark" id="scoreLabel">Calculating...</h5>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="fw-bold text-danger mb-2">Missing Keywords</h6>
+                        <div id="missingKeywords" class="p-2 border rounded bg-light" style="min-height: 100px; max-height: 250px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="fw-bold text-success mb-2">Matched Keywords</h6>
+                        <div id="matchedKeywords" class="p-2 border rounded bg-light" style="min-height: 100px; max-height: 250px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loading Area -->
+            <div id="loadingDiv" class="result-card text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h5 class="fw-bold text-dark">Reading PDF & Matching Keywords...</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Initialize PDF.js Worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let extractedCVText = "";
+
+    const roleKeywords = {
+        "software": ["python", "java", "javascript", "sql", "react", "node", "aws", "docker", "api", "git", "agile", "cloud", "development", "database", "frontend", "backend", "software"],
+        "data": ["python", "sql", "tableau", "power bi", "excel", "machine learning", "statistics", "r", "data analysis", "pandas", "visualization"],
+        "design": ["figma", "sketch", "adobe", "photoshop", "illustrator", "ui", "ux", "wireframe", "prototype", "user research", "interaction", "visual", "design"],
+        "marketing": ["seo", "social media", "google analytics", "content", "campaign", "email", "crm", "brand", "market research", "digital", "strategy", "sales", "advertising", "marketing"],
+        "sales": ["crm", "salesforce", "negotiation", "lead generation", "b2b", "communication", "target", "revenue", "client", "sales"],
+        "finance": ["excel", "accounting", "audit", "tax", "financial", "analysis", "budget", "forecast", "reconciliation", "reporting", "gaap", "finance"],
+        "hr": ["recruitment", "onboarding", "payroll", "employee relations", "talent acquisition", "hris", "performance management", "hr"],
+        "teacher": ["curriculum", "lesson", "classroom", "student", "assessment", "education", "teaching", "instruction", "learning"],
+        "doctor": ["patient", "clinical", "diagnosis", "treatment", "medical", "healthcare", "hospital", "surgery", "pharmacy", "nursing"],
+        "engineer": ["autocad", "solidworks", "project management", "structural", "mechanical", "civil", "construction", "design", "engineer"],
+        "customer": ["communication", "problem solving", "crm", "support", "ticket", "client", "customer service"],
+        "admin": ["microsoft office", "excel", "word", "scheduling", "organization", "communication", "administration"],
+        "legal": ["research", "legal", "contract", "litigation", "drafting", "compliance", "law"],
+        "general": ["communication", "teamwork", "leadership", "problem solving", "time management", "organization", "project", "management", "microsoft", "office"]
+    };
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Update UI
+        document.getElementById("fileName").innerText = file.name;
+        document.getElementById("fileInfo").style.display = "block";
+        document.getElementById("checkBtn").innerText = "Reading PDF...";
+        document.getElementById("checkBtn").disabled = true;
+        extractedCVText = ""; // Reset text
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const typedarray = new Uint8Array(e.target.result);
+            
+            // Read PDF using pdf.js
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                let maxPages = pdf.numPages;
+                let countPromises = [];
+                
+                for (let i = 1; i <= maxPages; i++) {
+                    let page = pdf.getPage(i);
+                    countPromises.push(page.then(function(page) {
+                        return page.getTextContent().then(function(text) {
+                            return text.items.map(function(s) { return s.str; }).join(' ');
+                        });
+                    }));
+                }
+                
+                Promise.all(countPromises).then(function(texts) {
+                    extractedCVText = texts.join(' ').toLowerCase();
+                    
+                    // Enable button once text is extracted
+                    document.getElementById("checkBtn").innerText = "Analyze Resume";
+                    document.getElementById("checkBtn").disabled = false;
+                });
+            }).catch(function(error) {
+                alert("Error reading PDF. Make sure the file is not password protected.");
+                document.getElementById("checkBtn").innerText = "Analyze Resume";
+                document.getElementById("checkBtn").disabled = false;
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function processATS() {
+        if (extractedCVText === "") { 
+            alert("PDF is still loading or empty. Please re-upload."); 
+            return; 
+        }
+
+        // Show loading spinner
+        document.getElementById("resultCard").style.display = "none";
+        document.getElementById("loadingDiv").style.display = "block";
+        document.getElementById("checkBtn").disabled = true;
+
+        setTimeout(() => {
+            const job = document.getElementById("targetJob").value;
+            const keywords = roleKeywords[job] || roleKeywords["general"];
+            
+            let matched = [];
+            let missing = [];
+
+            keywords.forEach(word => {
+                if(extractedCVText.includes(word)) { 
+                    matched.push(word); 
+                } else { 
+                    missing.push(word); 
+                }
+            });
+
+            // Calculate Score
+            let score = 0;
+            if (keywords.length > 0) {
+                score = Math.round((matched.length / keywords.length) * 100);
+            }
+
+            // Update UI
+            document.getElementById("loadingDiv").style.display = "none";
+            document.getElementById("resultCard").style.display = "block";
+            document.getElementById("checkBtn").disabled = false;
+
+            const scoreCircle = document.getElementById("scoreCircle");
+            let currentScore = 0;
+            let interval = setInterval(() => {
+                if (currentScore >= score) clearInterval(interval);
+                else { currentScore++; scoreCircle.innerText = currentScore + "%"; }
+            }, 20);
+
+            // Change color based on score
+            if (score >= 70) { 
+                scoreCircle.style.borderColor = "#10b981"; 
+                scoreCircle.style.color = "#10b981"; 
+            } else if (score >= 40) { 
+                scoreCircle.style.borderColor = "#f59e0b"; 
+                scoreCircle.style.color = "#f59e0b"; 
+            } else { 
+                scoreCircle.style.borderColor = "#ef4444"; 
+                scoreCircle.style.color = "#ef4444"; 
+            }
+
+            // Show Keywords
+            const missingDiv = document.getElementById("missingKeywords");
+            missingDiv.innerHTML = missing.length === 0 ? "<span class='text-muted'>None!</span>" : "";
+            missing.forEach(w => missingDiv.innerHTML += `<span class="keyword-badge badge-danger">${w}</span>`);
+
+            const matchedDiv = document.getElementById("matchedKeywords");
+            matchedDiv.innerHTML = "";
+            matched.forEach(w => matchedDiv.innerHTML += `<span class="keyword-badge badge-success">${w}</span>`);
+            
+        }, 1000); // 1 second delay for loading animation
+    }
+</script>

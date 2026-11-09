@@ -1,0 +1,628 @@
+﻿@model CVBuildo.Models.ResumeData
+<title>Free CV Builder - CV Buildo</title>
+
+<style>
+    /* ==========================================
+       BASE & LAYOUT STRUCTURES
+       ========================================== */
+    .cv-container { background: #fff; width: 100%; min-height: 800px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); color: #333; position: relative; font-size: 14px; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .cv-sidebar { padding: 30px; }
+    .cv-main { padding: 40px; }
+    .cv-photo { width: 120px; height: 120px; object-fit: cover; display: none; }
+    .cv-name { font-size: 2.2rem; font-weight: 700; margin-bottom: 5px; line-height: 1.1; }
+    .cv-title { font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+    .cv-section-title { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; margin-top: 25px; padding-bottom: 5px;}
+    .cv-text { font-size: 0.95rem; line-height: 1.6; white-space: pre-line; margin-bottom: 15px; }
+    .cv-contact-item { margin-bottom: 5px; font-size: 0.9rem; }
+
+    /* LAYOUT 1: SIDEBAR (Photo Left) */
+    .layout-sidebar .cv-sidebar { width: 35%; float: left; min-height: 100%; position: absolute; top: 0; bottom: 0; left: 0; }
+    .layout-sidebar .cv-main { width: 65%; float: right; }
+    .layout-sidebar .cv-photo { border-radius: 50%; margin-bottom: 20px; border: 4px solid rgba(255,255,255,0.2); }
+    .layout-sidebar .cv-name { color: #fff; }
+    .layout-sidebar .cv-sidebar .cv-section-title { color: #fff; border-bottom: 2px solid rgba(255,255,255,0.2); }
+    .layout-sidebar .cv-sidebar .cv-text, .layout-sidebar .cv-sidebar .cv-contact-item { color: rgba(255,255,255,0.8); }
+
+    /* LAYOUT 2: TOP HEADER (Photo Top) */
+    .layout-top .cv-header { padding: 40px; display: flex; align-items: center; border-bottom: 5px solid #eee; }
+    .layout-top .cv-photo { border-radius: 50%; margin-right: 30px; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .layout-top .cv-body { padding: 40px; }
+
+    /* LAYOUT 3: CLASSIC (Centered) */
+    .layout-classic { padding: 50px; font-family: 'Playfair Display', serif; }
+    .layout-classic .cv-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+    .layout-classic .cv-photo { border-radius: 50%; margin: 0 auto 15px auto; border: 2px solid #000; }
+    .layout-classic .cv-name { font-size: 2.8rem; color: #000; }
+    .layout-classic .cv-title { color: #555; font-style: italic; text-transform: none; }
+    .layout-classic .cv-section-title { color: #000; border-bottom: 1px solid #ccc; font-size: 1.2rem; }
+
+    /* LAYOUT 4: MINIMAL (Clean & Left Align) */
+    .layout-minimal { padding: 50px; font-family: 'Roboto', sans-serif; }
+    .layout-minimal .cv-header { display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+    .layout-minimal .cv-photo { border-radius: 8px; margin-right: 30px; width: 100px; height: 100px; border: 2px solid #e2e8f0; }
+    .layout-minimal .cv-name { font-size: 2.5rem; color: #1e293b; letter-spacing: -1px; }
+    .layout-minimal .cv-title { color: #64748b; text-transform: none; }
+    .layout-minimal .cv-section-title { color: #1e293b; border-bottom: 2px solid #cbd5e1; }
+
+    /* LAYOUT 5: EXECUTIVE (Dark Topbar) */
+    .layout-executive .cv-header { padding: 50px 40px; text-align: center; }
+    .layout-executive .cv-photo { border-radius: 50%; margin: 0 auto 20px auto; border: 3px solid #fff; }
+    .layout-executive .cv-name { font-size: 2.8rem; color: #fff; }
+    .layout-executive .cv-title { color: rgba(255,255,255,0.7); }
+    .layout-executive .cv-body { padding: 40px; }
+    .layout-executive .cv-section-title { border-bottom: 2px solid #333; }
+
+    /* LAYOUT 6: BOLD (Huge Typography) */
+    .layout-bold { padding: 40px; font-family: 'Montserrat', sans-serif; }
+    .layout-bold .cv-header { border-left: 15px solid #333; padding-left: 20px; margin-bottom: 30px; }
+    .layout-bold .cv-photo { border-radius: 0; width: 130px; height: 130px; margin-bottom: 15px; }
+    .layout-bold .cv-name { font-size: 3rem; font-weight: 800; text-transform: uppercase; }
+    .layout-bold .cv-section-title { display: inline-block; padding: 5px 15px; border-radius: 4px; border-bottom: none; }
+
+    /* ==========================================
+       THEMES (Colors - Works with any layout)
+       ========================================== */
+    /* Theme Blue */
+    .theme-blue.layout-sidebar .cv-sidebar { background: #1e293b; }
+    .theme-blue.layout-top .cv-header { background: #eff6ff; border-color: #3b82f6; }
+    .theme-blue.layout-top .cv-name { color: #1e3a8a; }
+    .theme-blue.layout-executive .cv-header { background: #1e3a8a; }
+    .theme-blue.layout-bold .cv-header { border-color: #3b82f6; }
+    .theme-blue .cv-section-title { color: #2563eb; border-color: #bfdbfe; }
+    .theme-blue.layout-classic .cv-section-title { color: #000; border-color: #ccc; }
+    .theme-blue.layout-bold .cv-section-title { background: #dbeafe; color: #1e3a8a; }
+
+    /* Theme Green */
+    .theme-green.layout-sidebar .cv-sidebar { background: #064e3b; }
+    .theme-green.layout-top .cv-header { background: #ecfdf5; border-color: #10b981; }
+    .theme-green.layout-top .cv-name { color: #064e3b; }
+    .theme-green.layout-executive .cv-header { background: #064e3b; }
+    .theme-green.layout-bold .cv-header { border-color: #10b981; }
+    .theme-green .cv-section-title { color: #059669; border-color: #a7f3d0; }
+    .theme-green.layout-classic .cv-section-title { color: #000; border-color: #ccc; }
+    .theme-green.layout-bold .cv-section-title { background: #d1fae5; color: #064e3b; }
+
+    /* Theme Purple */
+    .theme-purple.layout-sidebar .cv-sidebar { background: #4c1d95; }
+    .theme-purple.layout-top .cv-header { background: #f5f3ff; border-color: #8b5cf6; }
+    .theme-purple.layout-top .cv-name { color: #4c1d95; }
+    .theme-purple.layout-executive .cv-header { background: #4c1d95; }
+    .theme-purple.layout-bold .cv-header { border-color: #8b5cf6; }
+    .theme-purple .cv-section-title { color: #7c3aed; border-color: #ddd6fe; }
+    .theme-purple.layout-classic .cv-section-title { color: #000; border-color: #ccc; }
+    .theme-purple.layout-bold .cv-section-title { background: #ede9fe; color: #4c1d95; }
+
+    /* Theme Red */
+    .theme-red.layout-sidebar .cv-sidebar { background: #7f1d1d; }
+    .theme-red.layout-top .cv-header { background: #fef2f2; border-color: #ef4444; }
+    .theme-red.layout-top .cv-name { color: #7f1d1d; }
+    .theme-red.layout-executive .cv-header { background: #7f1d1d; }
+    .theme-red.layout-bold .cv-header { border-color: #ef4444; }
+    .theme-red .cv-section-title { color: #dc2626; border-color: #fecaca; }
+    .theme-red.layout-classic .cv-section-title { color: #000; border-color: #ccc; }
+    .theme-red.layout-bold .cv-section-title { background: #fee2e2; color: #7f1d1d; }
+
+    /* Theme Dark */
+    .theme-dark.layout-sidebar .cv-sidebar { background: #111827; }
+    .theme-dark.layout-top .cv-header { background: #1f2937; border-color: #374151; }
+    .theme-dark.layout-top .cv-name { color: #f9fafb; }
+    .theme-dark.layout-top .cv-title { color: #d1d5db; }
+    .theme-dark.layout-executive .cv-header { background: #000000; }
+    .theme-dark.layout-bold .cv-header { border-color: #111827; }
+    .theme-dark .cv-section-title { color: #111827; border-color: #d1d5db; }
+    .theme-dark.layout-classic .cv-section-title { color: #000; border-color: #ccc; }
+    .theme-dark.layout-bold .cv-section-title { background: #f3f4f6; color: #111827; }
+    .theme-dark.layout-sidebar .cv-section-title, .theme-dark.layout-executive .cv-section-title { color: #f9fafb; }
+
+    .custom-section-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <!-- LEFT SIDE: FORM -->
+        <div class="col-md-4 d-print-none">
+            <div class="card p-4 shadow-sm mb-4" style="position: sticky; top: 20px; max-height: 90vh; overflow-y: auto;">
+                <h4 class="mb-3">Build Your CV</h4>
+                <form method="post">
+                    
+                    <div class="mb-3 p-3 bg-light border rounded shadow-sm">
+                        <label class="form-label fw-bold text-primary fs-6">Select Target Job (Auto-Design & ATS)</label>
+                        <select class="form-select" id="targetJobSelect" onchange="autoSelectTemplate()">
+                            <option value="software">Software Engineer</option>
+                            <option value="data">Data Analyst / Scientist</option>
+                            <option value="design">UI/UX Designer</option>
+                            <option value="marketing">Marketing Manager</option>
+                            <option value="sales">Sales Executive</option>
+                            <option value="finance">Accountant / Finance</option>
+                            <option value="hr">HR Manager</option>
+                            <option value="teacher">Teacher / Educator</option>
+                            <option value="doctor">Doctor / Nurse</option>
+                            <option value="engineer">Civil / Mechanical Engineer</option>
+                            <option value="customer">Customer Service</option>
+                            <option value="admin">Admin Assistant</option>
+                            <option value="legal">Legal Assistant</option>
+                            <option value="general">Other / General</option>
+                        </select>
+                        <small class="text-success mt-1 d-block fw-semibold"><i class="bi bi-magic"></i> Design & keywords change automatically.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Choose Template (30 Designs)</label>
+                        <select asp-for="Template" class="form-select" id="templateSelect" onchange="changeTemplate()">
+                            <optgroup label="Sidebar Layouts">
+                                <option value="sidebar-blue">1. Sidebar - Blue</option>
+                                <option value="sidebar-green">2. Sidebar - Green</option>
+                                <option value="sidebar-purple">3. Sidebar - Purple</option>
+                                <option value="sidebar-red">4. Sidebar - Red</option>
+                                <option value="sidebar-dark">5. Sidebar - Dark</option>
+                            </optgroup>
+                            <optgroup label="Top Header Layouts">
+                                <option value="top-blue">6. Top Header - Blue</option>
+                                <option value="top-green">7. Top Header - Green</option>
+                                <option value="top-purple">8. Top Header - Purple</option>
+                                <option value="top-red">9. Top Header - Red</option>
+                                <option value="top-dark">10. Top Header - Dark</option>
+                            </optgroup>
+                            <optgroup label="Classic Layouts">
+                                <option value="classic-blue">11. Classic - Blue</option>
+                                <option value="classic-green">12. Classic - Green</option>
+                                <option value="classic-purple">13. Classic - Purple</option>
+                                <option value="classic-red">14. Classic - Red</option>
+                                <option value="classic-dark">15. Classic - Dark</option>
+                            </optgroup>
+                            <optgroup label="Minimal Layouts">
+                                <option value="minimal-blue">16. Minimal - Blue</option>
+                                <option value="minimal-green">17. Minimal - Green</option>
+                                <option value="minimal-purple">18. Minimal - Purple</option>
+                                <option value="minimal-red">19. Minimal - Red</option>
+                                <option value="minimal-dark">20. Minimal - Dark</option>
+                            </optgroup>
+                            <optgroup label="Executive Layouts">
+                                <option value="executive-blue">21. Executive - Blue</option>
+                                <option value="executive-green">22. Executive - Green</option>
+                                <option value="executive-purple">23. Executive - Purple</option>
+                                <option value="executive-red">24. Executive - Red</option>
+                                <option value="executive-dark">25. Executive - Dark</option>
+                            </optgroup>
+                            <optgroup label="Bold Layouts">
+                                <option value="bold-blue">26. Bold - Blue</option>
+                                <option value="bold-green">27. Bold - Green</option>
+                                <option value="bold-purple">28. Bold - Purple</option>
+                                <option value="bold-red">29. Bold - Red</option>
+                                <option value="bold-dark">30. Bold - Dark</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <hr />
+                    
+                    <h6 class="text-primary">Personal Details</h6>
+                    <div class="mb-2"><input asp-for="FullName" class="form-control" id="fullName" onkeyup="updatePreview()" placeholder="Full Name" required /></div>
+                    <div class="mb-2"><input asp-for="JobTitle" class="form-control" id="jobTitle" onkeyup="updatePreview()" placeholder="Job Title" /></div>
+                    <div class="mb-2"><input asp-for="Email" class="form-control" id="email" onkeyup="updatePreview()" placeholder="Email" /></div>
+                    <div class="mb-2"><input asp-for="Phone" class="form-control" id="phone" onkeyup="updatePreview()" placeholder="Phone" /></div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Photo</label>
+                        <input type="file" class="form-control" id="photoUpload" accept="image/*" onchange="handlePhotoUpload(event)" />
+                    </div>
+
+                    <h6 class="text-primary mt-4">CV Sections</h6>
+                    
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_summary" checked onchange="updatePreview()"><label class="form-check-label">Summary</label></div>
+                    <textarea asp-for="Summary" class="form-control mb-2" id="summary" rows="2" onkeyup="updatePreview()"></textarea>
+
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_experience" checked onchange="updatePreview()"><label class="form-check-label">Experience</label></div>
+                    <textarea asp-for="Experience" class="form-control mb-2" id="experience" rows="3" onkeyup="updatePreview()"></textarea>
+
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_education" checked onchange="updatePreview()"><label class="form-check-label">Education</label></div>
+                    <textarea asp-for="Education" class="form-control mb-2" id="education" rows="2" onkeyup="updatePreview()"></textarea>
+
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_skills" checked onchange="updatePreview()"><label class="form-check-label">Skills</label></div>
+                    <textarea asp-for="Skills" class="form-control mb-2" id="skills" rows="2" onkeyup="updatePreview()"></textarea>
+
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_projects" onchange="updatePreview()"><label class="form-check-label">Projects</label></div>
+                    <textarea asp-for="Projects" class="form-control mb-2" id="projects" rows="2" onkeyup="updatePreview()"></textarea>
+
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_certifications" onchange="updatePreview()"><label class="form-check-label">Certifications</label></div>
+                    <textarea asp-for="Certifications" class="form-control mb-2" id="certifications" rows="2" onkeyup="updatePreview()"></textarea>
+
+                    <div class="form-check form-switch mb-1"><input class="form-check-input" type="checkbox" id="chk_languages" onchange="updatePreview()"><label class="form-check-label">Languages</label></div>
+                    <input asp-for="Languages" class="form-control mb-3" id="languages" onkeyup="updatePreview()" />
+
+                    <h6 class="text-primary mt-4">Add Custom Section</h6>
+                    <div id="custom-sections-container"></div>
+                    <button type="button" class="btn btn-outline-success btn-sm w-100 mb-3" onclick="addCustomSection()">+ Add Section</button>
+
+                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold mt-3" onclick="preDownloadATSCheck()">Download PDF (ATS Check)</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: LIVE PREVIEW -->
+        <div class="col-md-8">
+            <h4 class="mb-3 d-print-none">Live Preview</h4>
+            
+            <div id="resume-preview" class="cv-container layout-sidebar theme-blue">
+                
+                <!-- SIDEBAR / EXECUTIVE LAYOUT (Photo Left / Top Dark) -->
+                <div id="layout-sidebar-wrapper" style="display: block;">
+                    <div class="cv-sidebar">
+                        <img id="p_photo_side" src="" alt="Photo" class="cv-photo" />
+                        <div class="cv-section-title mt-0">CONTACT</div>
+                        <div class="cv-contact-item"><strong>Email:</strong><br/> <span id="p_email_side">Email</span></div>
+                        <div class="cv-contact-item mt-2"><strong>Phone:</strong><br/> <span id="p_phone_side">Phone</span></div>
+                        <div id="sec_side_skills" style="display: block;">
+                            <div class="cv-section-title">SKILLS</div>
+                            <div id="p_skills_side" class="cv-text">Skills...</div>
+                        </div>
+                    </div>
+                    <div class="cv-main">
+                        <h1 id="p_fullName_side" class="cv-name">Your Name</h1>
+                        <div id="p_jobTitle_side" class="cv-title">Your Job Title</div>
+                        
+                        <div id="sec_side_summary"><div class="cv-section-title">SUMMARY</div><div id="p_summary_side" class="cv-text">Summary...</div></div>
+                        <div id="sec_side_exp"><div class="cv-section-title">EXPERIENCE</div><div id="p_experience_side" class="cv-text">Experience...</div></div>
+                        <div id="sec_side_edu"><div class="cv-section-title">EDUCATION</div><div id="p_education_side" class="cv-text">Education...</div></div>
+                        <div id="sec_side_proj" style="display: none;"><div class="cv-section-title">PROJECTS</div><div id="p_projects_side" class="cv-text">Projects...</div></div>
+                        <div id="sec_side_certs" style="display: none;"><div class="cv-section-title">CERTIFICATIONS</div><div id="p_certifications_side" class="cv-text">Certs...</div></div>
+                        <div id="custom-side-preview"></div>
+                    </div>
+                </div>
+
+                <!-- TOP HEADER / MINIMAL / CLASSIC / BOLD LAYOUTS -->
+                <div id="layout-flex-wrapper" style="display:none;">
+                    
+                    <!-- Top Header (Photo Left) -->
+                    <div class="cv-header" id="header-top" style="display: none;">
+                        <img id="p_photo_top" src="" alt="Photo" class="cv-photo" />
+                        <div>
+                            <h1 id="p_fullName_top" class="cv-name">Your Name</h1>
+                            <div id="p_jobTitle_top" class="cv-title">Your Job Title</div>
+                            <div class="mt-2" style="font-size: 0.9rem;"><span id="p_email_top">Email</span> | <span id="p_phone_top">Phone</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Classic Header (Centered) -->
+                    <div class="cv-header" id="header-classic" style="display: none;">
+                        <img id="p_photo_classic" src="" alt="Photo" class="cv-photo" />
+                        <h1 id="p_fullName_classic" class="cv-name">Your Name</h1>
+                        <div id="p_jobTitle_classic" class="cv-title">Your Job Title</div>
+                        <div class="mt-2 text-muted"><span id="p_email_classic">Email</span> | <span id="p_phone_classic">Phone</span></div>
+                    </div>
+
+                    <!-- Bold Header (Left Block) -->
+                    <div class="cv-header" id="header-bold" style="display: none;">
+                        <img id="p_photo_bold" src="" alt="Photo" class="cv-photo" />
+                        <div>
+                            <h1 id="p_fullName_bold" class="cv-name">Your Name</h1>
+                            <div id="p_jobTitle_bold" class="cv-title">Your Job Title</div>
+                            <div class="mt-2 fw-bold"><span id="p_email_bold">Email</span> | <span id="p_phone_bold">Phone</span></div>
+                        </div>
+                    </div>
+
+                    <div class="cv-body">
+                        <div id="sec_flex_summary"><div class="cv-section-title">SUMMARY</div><div id="p_summary_flex" class="cv-text">Summary...</div></div>
+                        <div id="sec_flex_exp"><div class="cv-section-title">EXPERIENCE</div><div id="p_experience_flex" class="cv-text">Experience...</div></div>
+                        <div id="sec_flex_edu"><div class="cv-section-title">EDUCATION</div><div id="p_education_flex" class="cv-text">Education...</div></div>
+                        <div id="sec_flex_proj" style="display: none;"><div class="cv-section-title">PROJECTS</div><div id="p_projects_flex" class="cv-text">Projects...</div></div>
+                        <div id="sec_flex_certs" style="display: none;"><div class="cv-section-title">CERTIFICATIONS</div><div id="p_certifications_flex" class="cv-text">Certs...</div></div>
+                        <div class="row">
+                            <div class="col-6" id="sec_flex_skills"><div class="cv-section-title">SKILLS</div><div id="p_skills_flex" class="cv-text">Skills...</div></div>
+                            <div class="col-6" id="sec_flex_langs" style="display: none;"><div class="cv-section-title">LANGUAGES</div><div id="p_languages_flex" class="cv-text">Languages...</div></div>
+                        </div>
+                        <div id="custom-flex-preview"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ATS Result Modal -->
+<div class="modal fade" id="atsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold">ATS Compatibility Check</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 text-center">
+          <h2 id="modalScore" class="display-4 fw-bold mb-2">0%</h2>
+          <p class="text-muted fs-5 mb-4">Match for <span id="modalRoleName" class="fw-bold text-dark"></span></p>
+          <div class="alert alert-warning text-start" id="modalWarning" style="display: none;">
+              <strong>Wait!</strong> Your CV is missing some important keywords for this role.
+          </div>
+          <div class="alert alert-success text-start" id="modalSuccess" style="display: none;">
+              <strong>Great Job!</strong> Your CV is highly optimized.
+          </div>
+          <h6 class="text-start fw-bold mt-4 text-danger" id="missingTitle">Missing Keywords:</h6>
+          <div id="modalMissing" class="text-start d-flex flex-wrap gap-2 mt-2"></div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back & Edit</button>
+        <button type="button" class="btn btn-primary fw-bold" onclick="executeDownload()">Download Anyway</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    var uploadedPhotoBase64 = "";
+    var customSectionCounter = 0;
+
+    const roleKeywords = {
+        "software": ["python", "java", "javascript", "sql", "react", "node", "aws", "docker", "api", "git", "agile", "cloud", "development", "database", "frontend", "backend", "software"],
+        "data": ["python", "sql", "tableau", "power bi", "excel", "machine learning", "statistics", "r", "data analysis", "pandas", "visualization"],
+        "design": ["figma", "sketch", "adobe", "photoshop", "illustrator", "ui", "ux", "wireframe", "prototype", "user research", "interaction", "visual", "design"],
+        "marketing": ["seo", "social media", "google analytics", "content", "campaign", "email", "crm", "brand", "market research", "digital", "strategy", "sales", "advertising", "marketing"],
+        "sales": ["crm", "salesforce", "negotiation", "lead generation", "b2b", "communication", "target", "revenue", "client", "sales"],
+        "finance": ["excel", "accounting", "audit", "tax", "financial", "analysis", "budget", "forecast", "reconciliation", "reporting", "gaap", "finance"],
+        "hr": ["recruitment", "onboarding", "payroll", "employee relations", "talent acquisition", "hris", "performance management", "hr"],
+        "teacher": ["curriculum", "lesson", "classroom", "student", "assessment", "education", "teaching", "instruction", "learning"],
+        "doctor": ["patient", "clinical", "diagnosis", "treatment", "medical", "healthcare", "hospital", "surgery", "pharmacy", "nursing"],
+        "engineer": ["autocad", "solidworks", "project management", "structural", "mechanical", "civil", "construction", "design", "engineer"],
+        "customer": ["communication", "problem solving", "crm", "support", "ticket", "client", "customer service"],
+        "admin": ["microsoft office", "excel", "word", "scheduling", "organization", "communication", "administration"],
+        "legal": ["research", "legal", "contract", "litigation", "drafting", "compliance", "law"],
+        "general": ["communication", "teamwork", "leadership", "problem solving", "time management", "organization", "project", "management", "microsoft", "office"]
+    };
+
+    const jobToTemplateMap = {
+        "software": "sidebar-green",
+        "data": "minimal-blue",
+        "design": "top-purple",
+        "marketing": "top-red",
+        "sales": "bold-blue",
+        "finance": "executive-blue",
+        "hr": "top-dark",
+        "teacher": "classic-blue",
+        "doctor": "sidebar-blue",
+        "engineer": "bold-dark",
+        "customer": "minimal-dark",
+        "admin": "classic-dark",
+        "legal": "executive-dark",
+        "general": "sidebar-blue"
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        autoSelectTemplate();
+        updatePreview();
+    });
+
+    function autoSelectTemplate() {
+        var job = document.getElementById("targetJobSelect").value;
+        var recommendedTemplate = jobToTemplateMap[job];
+        document.getElementById("templateSelect").value = recommendedTemplate;
+        changeTemplate();
+    }
+
+    function updatePreview() {
+        var name = document.getElementById("fullName").value || "Your Name";
+        var title = document.getElementById("jobTitle").value || "Your Job Title";
+        var email = document.getElementById("email").value || "Email";
+        var phone = document.getElementById("phone").value || "Phone";
+        
+        var summary = document.getElementById("summary").value || "Summary...";
+        var exp = document.getElementById("experience").value || "Experience...";
+        var edu = document.getElementById("education").value || "Education...";
+        var skills = document.getElementById("skills").value || "Skills...";
+        var projects = document.getElementById("projects").value || "Projects...";
+        var certs = document.getElementById("certifications").value || "Certs...";
+        var langs = document.getElementById("languages").value || "Languages...";
+
+        // Sidebar updates
+        document.getElementById("p_fullName_side").innerText = name;
+        document.getElementById("p_jobTitle_side").innerText = title;
+        document.getElementById("p_email_side").innerText = email;
+        document.getElementById("p_phone_side").innerText = phone;
+        document.getElementById("p_summary_side").innerText = summary;
+        document.getElementById("p_experience_side").innerText = exp;
+        document.getElementById("p_education_side").innerText = edu;
+        document.getElementById("p_skills_side").innerText = skills;
+        document.getElementById("p_projects_side").innerText = projects;
+        document.getElementById("p_certifications_side").innerText = certs;
+
+        // Top Header
+        document.getElementById("p_fullName_top").innerText = name;
+        document.getElementById("p_jobTitle_top").innerText = title;
+        document.getElementById("p_email_top").innerText = email;
+        document.getElementById("p_phone_top").innerText = phone;
+
+        // Classic Header
+        document.getElementById("p_fullName_classic").innerText = name;
+        document.getElementById("p_jobTitle_classic").innerText = title;
+        document.getElementById("p_email_classic").innerText = email;
+        document.getElementById("p_phone_classic").innerText = phone;
+
+        // Bold Header
+        document.getElementById("p_fullName_bold").innerText = name;
+        document.getElementById("p_jobTitle_bold").innerText = title;
+        document.getElementById("p_email_bold").innerText = email;
+        document.getElementById("p_phone_bold").innerText = phone;
+
+        // Flex Body
+        document.getElementById("p_summary_flex").innerText = summary;
+        document.getElementById("p_experience_flex").innerText = exp;
+        document.getElementById("p_education_flex").innerText = edu;
+        document.getElementById("p_skills_flex").innerText = skills;
+        document.getElementById("p_projects_flex").innerText = projects;
+        document.getElementById("p_certifications_flex").innerText = certs;
+        document.getElementById("p_languages_flex").innerText = langs;
+
+        // Toggle Sections
+        var secs = ['summary', 'experience', 'education', 'skills', 'projects', 'certifications', 'languages'];
+        secs.forEach(s => {
+            var isChecked = document.getElementById("chk_" + s).checked;
+            var display = isChecked ? "block" : "none";
+            if(document.getElementById("sec_side_" + s)) document.getElementById("sec_side_" + s).style.display = display;
+            if(document.getElementById("sec_flex_" + s)) document.getElementById("sec_flex_" + s).style.display = display;
+        });
+    }
+
+    function handlePhotoUpload(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedPhotoBase64 = e.target.result;
+                document.querySelectorAll('.cv-photo').forEach(img => {
+                    img.src = uploadedPhotoBase64;
+                    img.style.display = "block";
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function changeTemplate() {
+        var template = document.getElementById("templateSelect").value; // e.g. "sidebar-blue"
+        var parts = template.split("-");
+        var layout = parts[0];
+        var theme = parts[1];
+        
+        var previewBox = document.getElementById("resume-preview");
+        previewBox.className = "cv-container layout-" + layout + " theme-" + theme;
+        
+        var wrapperSidebar = document.getElementById("layout-sidebar-wrapper");
+        var wrapperFlex = document.getElementById("layout-flex-wrapper");
+        
+        var headerTop = document.getElementById("header-top");
+        var headerClassic = document.getElementById("header-classic");
+        var headerBold = document.getElementById("header-bold");
+        
+        // Hide all wrappers and headers
+        wrapperSidebar.style.display = "none";
+        wrapperFlex.style.display = "none";
+        headerTop.style.display = "none";
+        headerClassic.style.display = "none";
+        headerBold.style.display = "none";
+
+        if (layout === "sidebar" || layout === "executive") {
+            wrapperSidebar.style.display = "block";
+            if (layout === "executive") {
+                // Executive uses a top dark header, but we reuse sidebar layout for simplicity
+                // We can just adjust CSS to make it look different
+            }
+        } else {
+            wrapperFlex.style.display = "block";
+            
+            if (layout === "top") {
+                headerTop.style.display = "flex";
+            } else if (layout === "classic") {
+                headerClassic.style.display = "flex";
+                headerClassic.style.flexDirection = "column";
+            } else if (layout === "minimal") {
+                headerTop.style.display = "flex"; // Minimal uses top header layout
+            } else if (layout === "bold") {
+                headerBold.style.display = "flex";
+            }
+        }
+    }
+
+    // Custom Sections Logic
+    function addCustomSection() {
+        customSectionCounter++;
+        var id = customSectionCounter;
+        var container = document.getElementById("custom-sections-container");
+        var html = `
+            <div class="custom-section-box" id="custom-box-${id}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <input type="text" class="form-control form-control-sm w-50" id="custom_title_${id}" placeholder="Heading" onkeyup="updateCustomPreview()" />
+                    <div>
+                        <button type="button" class="btn btn-sm btn-light border" onclick="moveUp('custom-box-${id}')">Up</button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeCustomSection('${id}')">X</button>
+                    </div>
+                </div>
+                <textarea class="form-control form-control-sm" id="custom_text_${id}" rows="2" placeholder="Details..." onkeyup="updateCustomPreview()"></textarea>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        updateCustomPreview();
+    }
+
+    function removeCustomSection(id) {
+        var box = document.getElementById("custom-box-" + id);
+        if (box) box.remove();
+        updateCustomPreview();
+    }
+
+    function moveUp(id) {
+        var element = document.getElementById(id);
+        var previous = element.previousElementSibling;
+        if (previous) { element.parentNode.insertBefore(element, previous); }
+        updateCustomPreview();
+    }
+
+    function updateCustomPreview() {
+        var sidePreview = document.getElementById("custom-side-preview");
+        var flexPreview = document.getElementById("custom-flex-preview");
+        sidePreview.innerHTML = "";
+        flexPreview.innerHTML = "";
+
+        for (var i = 1; i <= customSectionCounter; i++) {
+            var titleInput = document.getElementById("custom_title_" + i);
+            var textInput = document.getElementById("custom_text_" + i);
+            if (titleInput && textInput) {
+                var title = titleInput.value || "Custom Section";
+                var text = textInput.value || "Details...";
+                var html = `<div><div class="cv-section-title">${title.toUpperCase()}</div><div class="cv-text" style="white-space: pre-line;">${text}</div></div>`;
+                sidePreview.insertAdjacentHTML('beforeend', html);
+                flexPreview.insertAdjacentHTML('beforeend', html);
+            }
+        }
+    }
+
+    // === ATS CHECK ===
+    function preDownloadATSCheck() {
+        var name = document.getElementById("fullName").value;
+        if(!name) { alert("Please enter your Full Name first."); return; }
+
+        var job = document.getElementById("targetJobSelect").value;
+        var jobName = document.getElementById("targetJobSelect").options[document.getElementById("targetJobSelect").selectedIndex].text;
+        
+        var cvText = document.getElementById("resume-preview").innerText.toLowerCase();
+        var keywords = roleKeywords[job] || roleKeywords["general"];
+        
+        var missing = [];
+        var matched = 0;
+
+        keywords.forEach(word => {
+            if(cvText.includes(word)) { matched++; } else { missing.push(word); }
+        });
+
+        var score = Math.round((matched / keywords.length) * 100);
+        
+        document.getElementById("modalScore").innerText = score + "%";
+        document.getElementById("modalRoleName").innerText = jobName;
+        
+        var modalWarning = document.getElementById("modalWarning");
+        var modalSuccess = document.getElementById("modalSuccess");
+        var modalMissing = document.getElementById("modalMissing");
+        var missingTitle = document.getElementById("missingTitle");
+        
+        modalMissing.innerHTML = "";
+        
+        if(score < 60) {
+            modalWarning.style.display = "block";
+            modalSuccess.style.display = "none";
+            missingTitle.style.display = "block";
+            missing.forEach(word => {
+                modalMissing.innerHTML += `<span class="badge bg-danger px-3 py-2 text-capitalize">${word}</span>`;
+            });
+        } else {
+            modalWarning.style.display = "none";
+            modalSuccess.style.display = "block";
+            missingTitle.style.display = "none";
+        }
+
+        var myModal = new bootstrap.Modal(document.getElementById('atsModal'));
+        myModal.show();
+    }
+
+    function executeDownload() {
+        var modalEl = document.getElementById('atsModal');
+        var modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+        setTimeout(() => { window.print(); }, 400);
+    }
+</script>
